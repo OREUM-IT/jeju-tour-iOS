@@ -1,0 +1,50 @@
+# 수동 실행 — 보관(archive) 뒤 App Store Connect(TestFlight)에 올린다.
+# 서명은 App Store Connect API 키(Admin)로 Xcode 자동 서명을 쓴다 (인증서 · 프로필을 Apple 쪽에서 만든다).
+# 필요한 Secrets: APPLE_TEAM_ID · ASC_KEY_ID · ASC_ISSUER_ID · ASC_KEY_P8 (README 2절)
+name: testflight
+on:
+  workflow_dispatch:
+jobs:
+  upload:
+    runs-on: macos-15
+    timeout-minutes: 45
+    env:
+      TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Xcode project (XcodeGen)
+        run: |
+          xcodebuild -version
+          brew install xcodegen
+          xcodegen generate
+      - name: App Store Connect API key
+        env:
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+        run: |
+          test -n "$TEAM_ID" && test -n "$ASC_KEY_ID" && test -n "$ASC_ISSUER_ID" && test -n "$ASC_KEY_P8"
+          mkdir -p "$RUNNER_TEMP/keys"
+          printf '%s\n' "$ASC_KEY_P8" > "$RUNNER_TEMP/keys/AuthKey.p8"
+          sed "s/TEAM_ID_PLACEHOLDER/$TEAM_ID/" ExportOptions.plist > "$RUNNER_TEMP/ExportOptions.plist"
+      - name: Archive (build number = run number)
+        run: |
+          set -o pipefail
+          xcodebuild -quiet -project Oreumit.xcodeproj -scheme Oreumit -configuration Release \
+            -destination 'generic/platform=iOS' -archivePath "$RUNNER_TEMP/Oreumit.xcarchive" \
+            DEVELOPMENT_TEAM="$TEAM_ID" CURRENT_PROJECT_VERSION="$GITHUB_RUN_NUMBER" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$RUNNER_TEMP/keys/AuthKey.p8" \
+            -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
+            archive
+      - name: Upload to App Store Connect (TestFlight)
+        run: |
+          set -o pipefail
+          xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/Oreumit.xcarchive" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" -exportPath "$RUNNER_TEMP/export" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$RUNNER_TEMP/keys/AuthKey.p8" \
+            -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER_ID"
+      - name: Remove the key
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/keys"
