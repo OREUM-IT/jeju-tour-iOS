@@ -21,7 +21,7 @@
 | `App/Info.plist` | 이름(오름잇), 위치 · 카메라 권한 문구, 세로 화면, 암호화 신고 면제 |
 | `App/Assets.xcassets` | 앱 아이콘. **지금은 160px 로고를 1024px로 키운 임시본이라 원본 1024px로 바꿔야 한다** |
 | `project.yml` | [XcodeGen](https://github.com/yonaskolb/XcodeGen) 설정. `.xcodeproj`는 저장소에 넣지 않고 빌드할 때 만든다 |
-| `.github/workflows/build.yml` | 푸시마다 macOS에서 서명 없이 컴파일한다(비밀값 필요 없음) |
+| `.github/workflows/build.yml` | PR과 main 푸시마다 macOS에서 서명 없이 컴파일한다(비밀값 필요 없음) |
 | `.github/workflows/testflight.yml` | 수동 실행. 보관(archive) 뒤 TestFlight에 올린다 |
 | `ExportOptions.plist` | App Store Connect 업로드 설정 |
 
@@ -65,7 +65,7 @@ iPhone 전용(`TARGETED_DEVICE_FAMILY: "1"`)이고 iOS 16 이상이다. iPad에�
 
 ## 4. 확인한 것과 안 한 것
 
-- Swift 코드는 Linux 작업 환경에서 썼고 그곳에서는 컴파일하지 못했다. 컴파일은 GitHub Actions `build`(macOS, Xcode 16)로 확인한다.
+- Swift 코드는 Linux 작업 환경에서 써서 그곳에서는 컴파일하지 못했다. 2026-11-25 GitHub Actions `build`(macOS 15, Xcode 16.4, iOS 시뮬레이터, 서명 없음)에서 컴파일이 통과했고 컴파일러 경고는 0건이었다.
 - TestFlight 업로드, 실제 iPhone 동작, 심사 통과는 아직 확인하지 않았다.
 - 자동 서명은 실행할 때마다 「Apple Development」 인증서를 새로 만들 수 있다(개발자 사이트에 「Created via API」로 쌓인다). 쌓이면 지우거나, 배포 인증서와 프로필을 Secrets로 넣는 수동 서명으로 바꾼다.
 
