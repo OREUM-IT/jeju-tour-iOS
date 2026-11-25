@@ -1,0 +1,23 @@
+# 서명 없이 시뮬레이터용으로 빌드해 Swift 코드가 컴파일되는지 본다 (비밀값 필요 없음)
+name: build
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+jobs:
+  simulator:
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Xcode project (XcodeGen)
+        run: |
+          xcodebuild -version
+          brew install xcodegen
+          xcodegen generate
+      - name: Build for the iOS simulator without signing
+        run: |
+          set -o pipefail
+          xcodebuild -quiet -project Oreumit.xcodeproj -scheme Oreumit -configuration Debug \
+            -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO build

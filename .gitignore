@@ -1,0 +1,13 @@
+# xcodegen 이 만드는 프로젝트 · 빌드 결과
+*.xcodeproj
+*.xcworkspace
+build/
+DerivedData/
+*.xcarchive
+*.ipa
+xcuserdata/
+.DS_Store
+# 비밀값 — App Store Connect API 키는 GitHub Secrets 에만 둔다
+*.p8
+*.p12
+*.mobileprovision
